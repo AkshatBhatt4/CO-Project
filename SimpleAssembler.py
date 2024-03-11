@@ -145,3 +145,59 @@ register={
     't5':'11110',
     't6':'11111',}
 
+with open("INPUT.TXT","r") as f:
+    Code=[]
+    Codeline=[]
+    final2=[]
+    A=f.readlines()
+    for i in A:
+        for j in i.split():
+            Code.append(j)
+        a=len(Code)
+        Codeline.append(Code[a-2])
+        Codeline.append(Code[a-1])
+        f=0
+        g=1
+    while g<len(Codeline):
+        final=[]
+        final.append(Codeline[f])
+        final.append(Codeline[g])
+        final2.append(final)
+        f+=2
+        g+=2
+
+
+with open ("OUTPUT.TXT","w") as f:
+    for i in final2:
+        types = opcode[i[0]][0]
+        if types == "r":
+            f.write(r_type(i[0],i[1]))
+            f.write("\n")
+        elif types == "i":
+            f.write(i_type(i[0],i[1]))
+            f.write("\n")
+        elif types == "s":
+            f.write(s_type(i[0],i[1]))
+            f.write("\n")
+        elif types == "r":
+            f.write(r_type(i[0],i[1]))
+            f.write("\n")
+        elif types == "j":
+            f.write(j_type(i[0],i[1]))
+            f.write("\n")
+        elif types == "u":
+            f.write(u_type(i[0],i[1]))
+            f.write("\n")
+        elif types == "b":
+            f.write(b_type(i[0],i[1]))
+            f.write("\n")
+        else:
+            f.write("Instruction Error")
+            f.write("\n")
+    
+    if final2[-1] != ["beq", "zero,zero,0"]:
+        f.write("Missing Virtual Halt\n")
+    
+    for i in range(0,len(final2)-1):
+        if i == ["beq", "zero,zero,0"]:
+            f.write("Virtual Halt in the Middle\n")

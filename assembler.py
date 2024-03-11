@@ -91,6 +91,19 @@ def i_type(instruction,code):
     output += register[rd]
     output += opcode[instruction][2]
     return output
+def u_type(instruction,code):
+        rd,imm=code.split(",")
+        if rd not in register:
+            return "Register Error"
+        imm=decimaltobinary_32(imm)
+        imm = imm[::-1]
+        imm=imm[12:]
+        imm = imm[::-1]
+        output = imm
+        output += register[rd]
+        output += opcode[instruction][1]
+        return output
+
 
 opcode={"add":("r","0000000","000","0110011"),"sub":("r","0100000","000","0110011"),"sll":("r","0000000","001","0110011"),"slt":("r","0000000","010","0110011"),"sltu":("r","0000000","011","0110011"),"xor":("r","0000000","100","0110011"),"srl":("r","0000000","101","0110011"),"or":("r","0000000","110","0110011"),"and":("r","0000000","111","0110011")
         ,"lw":("i","010","0000011"),"addi":("i","000","0010011"),"sltiu":("i","011","0010011"),"jalr":("i","000","1100111")

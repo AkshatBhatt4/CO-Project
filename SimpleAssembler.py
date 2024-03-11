@@ -104,6 +104,43 @@ def u_type(instruction,code):
         output += opcode[instruction][1]
         return output
 
+def r_type(instruction,code):
+    output = opcode[instruction][1]
+    rd,rs1,rs2=code.split(",")
+    if rd not in register or rs1 not in register or rs2 not in register:
+        return "Register Error"
+    output += register[rs2]
+    output += register[rs1]
+    output += opcode[instruction][2]
+    output += register[rd]
+    output += opcode[instruction][3]
+    return output
+
+def s_type(instruction,code):
+    rs2,rs1 = code.split(",")
+    imm,rs1 = rs1.split("(")
+    imm = decimaltobinary_12(imm)
+    rs1 = rs1[0:-1]
+    if rs2 not in register or rs1 not in register:
+        return "Register Error"
+    output = imm[-12:-5] + register[rs2] + register[rs1] + opcode[instruction][1] + imm[-5:] + opcode[instruction][2]
+    return output
+
+def b_type(instruction,code):
+    rs1,rs2,imm = code.split(",")
+    imm = decimaltobinary_32(imm)
+    if rs1 not in register or rs2 not in register:
+        return "Register Error"
+    output = imm[-13] + imm[-11:-5] + register[rs2] + register[rs1] + opcode[instruction][1] + imm[-5:-1] + imm[-12] +  opcode[instruction][2]
+    return output
+
+def j_type(instruction,code):
+    rd,imm = code.split(",")
+    imm = decimaltobinary_32(imm)
+    if rd not in register:
+        return "Register Error"
+    output = imm[-21] + imm[-11:-1] + imm[-12] + imm[-20:-12] + register[rd] + opcode[instruction][1]
+    return output
 
 opcode={"add":("r","0000000","000","0110011"),"sub":("r","0100000","000","0110011"),"sll":("r","0000000","001","0110011"),"slt":("r","0000000","010","0110011"),"sltu":("r","0000000","011","0110011"),"xor":("r","0000000","100","0110011"),"srl":("r","0000000","101","0110011"),"or":("r","0000000","110","0110011"),"and":("r","0000000","111","0110011")
         ,"lw":("i","010","0000011"),"addi":("i","000","0010011"),"sltiu":("i","011","0010011"),"jalr":("i","000","1100111")

@@ -239,7 +239,7 @@ def bge(rs1,rs2,imm,pc):
         pc = pc + imm
     else:
         pc = pc + 4
-    return PC
+    return pc
 
 
 #U Type

@@ -239,4 +239,41 @@ def bge(rs1,rs2,imm,pc):
         pc = pc + imm
     else:
         pc = pc + 4
+    return PC
+
+
+#U Type
+def auipc(code,pc):
+    imm = code[-32:-12] + "000000000000"
+    imm = bintodecs(imm)
+    rd = code[-12:-7]
+    temp = pc + imm
+    temp = decimaltobinary_32(temp)
+    registers[rd] = temp
+    return pc+4
+
+def lui(code,pc):
+    imm = code[-32:-12] + "000000000000"
+    rd = code[-12:-7]
+    registers[rd] = imm
+    return pc+4
+
+#J Type
+def jal(code,pc):
+    imm = code[-32] + code[-20:-12] + code[-21] + code[-31:-21] + "0"
+    rd = code[-12:-7]
+    temp = pc + 4
+    temp = decimaltobinary_32(temp)
+    registers[rd] = temp
+    pc = pc + bintodecs(sext(imm))
+    if pc%2==1:
+        pc = pc - 1
     return pc
+
+#Reg print and main
+def RegPrint(l):
+    s=""
+    for i in registers.keys():
+        s=s+("0b"+registers[i]+" ")
+    s+="\n"
+    l.append(s)

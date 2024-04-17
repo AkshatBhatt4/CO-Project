@@ -1,3 +1,7 @@
+import sys
+import os
+
+#Functions for Numbers
 def decimaltobinary_32(num):
     num=int(num)
     if num >= 0:
@@ -9,8 +13,8 @@ def decimaltobinary_32(num):
             a = a//2
         s = s[::-1]
         filler = 32 - len(s)
-        if filler < 0:
-            print("number out of Range")
+        if filler <= 0:
+            #print("number out of Range")
             s='-1'
             return s
         s = filler*"0" + s
@@ -30,22 +34,46 @@ def decimaltobinary_32(num):
             a = a//2
         s = s[::-1]
         filler = 32 - len(s)
-        if filler < 0:
-            print("Number out of Range")
+        if filler <= 0:
+            #print("Number out of Range")
             s='-1'
             return s
         s = filler*"1" + s
         return s
-def RegPrint():
-    for i in registers.keys():
-        print(registers[i],end=" ")
-    print()
+    
+def bintodecu(binary):
+    c=0
+    s=0
+    while(c<len(binary)):
+        s=s+((2**(c))*int(binary[len(binary)-1-c]))
+        c=c+1
+    return s
+    
+def bintodecs(binary):
+    is_neg = binary[0] == '1'
 
-def pcPrint(pc):
-    print(decimaltobinary_32(pc))
-    return
+    if is_neg:
+        pos = ''.join('1' if bit == '0' else '0' for bit in binary)
+        pos = "00" + bin(int(pos, 2) + 1)[2:]
+    else:
+        pos = binary
 
-def RType(code,pc):
+    decimal = int(pos, 2)
+    if is_neg:
+        decimal = -decimal
+
+    return decimal
+
+def sext(imm):
+    while len(imm)<32:
+        if imm[0] == '0':
+            imm = '0' + imm
+        else:
+            imm = '1' + imm
+    return imm
+
+#R Type
+def R_type(code,pc):
     rd=code[-12:-7]
     rs1=code[-20:-15]
     rs2=code[-25:-20]
@@ -66,99 +94,59 @@ def RType(code,pc):
         elif(funct3=="101"):
             pc=srl(rd,rs1,rs2,pc)
         elif(funct3=="110"):
-            pc=or_functioin(rd,rs1,rs2,pc)
+            pc=or_func(rd,rs1,rs2,pc)
         elif(funct3=="111"):
-            pc=and_function(rd,rs1,rs2,pc)
+            pc=and_func(rd,rs1,rs2,pc)
     return pc
 
-def BType(code,pc):
-    funct3=code[-15:-12]
-    imm=code[-12:-7]
-    rs1=code[-20:-15]
-    rs2=code[-25:-20]
-    if(funct3=="000"):
-        pc=beq(rs1,rs2,imm,pc)
-    elif(funct3=="001"):
-        pc=bne(rs1,rs2,imm,pc)
-    elif(funct3=="100"):
-        pc=blt(rs1,rs2,imm,pc)
-    elif(funct3=="101"):
-        pc=bge(rs1,rs2,imm,pc)
-    return pc
+def add(rd,rs1,rs2,pc):
+    n1 = bintodecs(registers[rs1])
+    n2 = bintodecs(registers[rs2])
+    x = (n1 + n2)
+    y = decimaltobinary_32(x) 
+    if len(y) > 32:
+        registers[rd] = y[-32:]
+    else:
+        registers[rd] = y
+    return(pc+4)
 
-def Main(pc):
-    while(1):
-        OpCode=statements[pc][-7:]
-        if (pc>=(len(statements)-1)*4):
-            RegPrint()
-        #R Type
-        elif(OpCode=="0110011"):
-            pc=RType(statements[pc],pc)
-        #I Type
-        elif(OpCode=="0000011"):
-            pc=lw(statements[pc],pc)
-        elif(OpCode=="0010011"):
-            pc=addi(statements[pc],pc)
-        elif(OpCode=="1100111"):
-            pc=jalr(statements[pc],pc)
-        #S Type
-        elif(OpCode=="0100011"):
-            pc=sw(statements[pc],pc)
-        #B Type
-        elif(OpCode=="1100011"):
-            pc=BType(statements[pc],pc)
-        #U Type
-        elif(OpCode=="0110111"):
-            pc=lui(statements[pc],pc)
-        elif(OpCode=="0010111"):
-            pc=auipc(statements[pc],pc)
-        #J Type
-        elif(OpCode=="1101111"):
-            pc=jal(statements[pc],pc)
-        pcPrint(pc)
-        RegPrint()
-        
-statements = {}
-var = 0
-while(1):
-    try:
-        line=input()
-        if (line!=""):
-            statements[var]=line
-            var+=4
-    except EOFError:
-        break
-pc =0
-registers={'00000':'0000000000000000',
-'00001':'0000000000000000',
-'00010':'0000000000000000',
-'00011':'0000000000000000',
-'00100':'0000000000000000',
-'00101':'0000000000000000',
-'00110':'0000000000000000',
-'00111':'0000000000000000',
-'01000':'0000000000000000',
-'01001':'0000000000000000',
-'01010':'0000000000000000',
-'01011':'0000000000000000',
-'01100':'0000000000000000',
-'01101':'0000000000000000',
-'01110':'0000000000000000',
-'01111':'0000000000000000',
-'10000':'0000000000000000',
-'10001':'0000000000000000',
-'10010':'0000000000000000',
-'10011':'0000000000000000',
-'10100':'0000000000000000',
-'10101':'0000000000000000',
-'10110':'0000000000000000',
-'10111':'0000000000000000',
-'11000':'0000000000000000',
-'11001':'0000000000000000',
-'11010':'0000000000000000',
-'11011':'0000000000000000',
-'11100':'0000000000000000',
-'11101':'0000000000000000',
-'11110':'0000000000000000',
-'11111':'0000000000000000'}
-Main(pc)
+def sub(rd,rs1,rs2,pc):
+    x=registers[rs1]
+    y=registers[rs2]
+    z=bintodecs(x)-bintodecs(y)
+    registers[rd]=decimaltobinary_32(z)
+    return pc+4
+
+def slt(rd,rs1,rs2,pc):
+    x=registers[rs1]
+    y=registers[rs2]
+    if(bintodecs(x)<bintodecs(y)):
+        registers[rd]=decimaltobinary_32(1)
+    return pc+4
+
+def sltu(rd,rs1,rs2,pc):
+    x=registers[rs1]
+    y=registers[rs2]
+    if(bintodecu(x)<bintodecu(y)):
+        registers[rd]=decimaltobinary_32(1)
+    return pc+4
+
+def xor(rd,rs1,rs2,pc):
+    registers[rd]=decimaltobinary_32(bintodecs(registers[rs1])^bintodecs(registers[rs2]))
+    return pc+4
+
+def or_func(rd,rs1,rs2,pc):
+    registers[rd]=decimaltobinary_32(bintodecs(registers[rs1])|bintodecs(registers[rs2]))
+    return pc+4
+
+def and_func(rd,rs1,rs2,pc):
+    registers[rd]=decimaltobinary_32(bintodecs(registers[rs1])& bintodecs(registers[rs2]))
+    return pc+4
+
+def sll(rd,rs1,rs2,pc):
+    registers[rd]=decimaltobinary_32(bintodecs(registers[rs1])*(2**bintodecu(registers[rs2][-5:])))
+    return pc+4
+
+def srl(rd,rs1,rs2,pc):
+    registers[rd]=decimaltobinary_32(bintodecs(registers[rs1])//(2**bintodecu(registers[rs2][-5:])))
+    return pc+4

@@ -150,3 +150,93 @@ def sll(rd,rs1,rs2,pc):
 def srl(rd,rs1,rs2,pc):
     registers[rd]=decimaltobinary_32(bintodecs(registers[rs1])//(2**bintodecu(registers[rs2][-5:])))
     return pc+4
+
+
+#I Type
+def lw(code,pc):
+    imm = code[-32:-20]
+    rd = code[-12:-7]
+    rs1 = code[-20:-15]
+    add = hex(bintodecs(registers[rs1]) + bintodecs(sext(imm)))
+    while(len(add)<10):
+        add = "0x" + "0" + add[2:]
+    registers[rd] = memory[add]
+    return pc+4
+
+def addi(code,pc):
+    imm = sext(code[-32:-20])
+    rd = code[-12:-7]
+    rs1 = code[-20:-15]
+    value = bintodecs(registers[rs1]) + bintodecs(imm)
+    registers[rd] = decimaltobinary_32(value)
+    return pc+4
+
+def jalr(code,pc):
+    imm = sext(code[-32:-20])
+    rd = code[-12:-7]
+    rs1 = code[-20:-15]
+    temp = decimaltobinary_32(pc + 4)
+    registers[rd] = temp
+    pc = bintodecs(registers[rs1]) + bintodecs(imm)
+    if pc%2==1:
+        pc = pc - 1
+    return pc
+
+#S Type
+def sw(code,pc):
+    imm = code[-32:-25] + code[-12:-7]
+    rs1 = code[-20:-15]
+    rs2 = code[-25:-20]
+    add = bintodecs(registers[rs1]) + bintodecs(sext(imm))
+    add = hex(add)
+    while(len(add)<10):
+        add = "0x" + "0" + add[2:]
+    memory[add] = registers[rs2]
+    return pc+4
+
+#B Type
+def B_type(code,pc):
+    funct3 = code[-15:-12]
+    imm = code[-32] + code[-8] + code[-31:-25] + code[-12:-8] + '0'
+    imm = sext(imm)
+    imm = bintodecs(imm)
+
+    rs1 = code[-20:-15]
+    rs2 = code[-25:-20]
+    if funct3 == "000":
+        pc = beq(rs1,rs2,imm,pc)
+    if funct3 == "001":
+        pc = bne(rs1,rs2,imm,pc)
+    if funct3 == "100":
+        pc = blt(rs1,rs2,imm,pc)
+    if funct3 == "101":
+        pc = bge(rs1,rs2,imm,pc)
+    return pc
+
+def beq(rs1,rs2,imm,pc):
+    if bintodecs(registers[rs1])==bintodecs(registers[rs2]):
+        pc = pc + imm
+    else:
+        pc = pc + 4
+    return pc
+
+def bne(rs1,rs2,imm,pc):
+    if bintodecs(registers[rs1])!=bintodecs(registers[rs2]):
+        pc = pc + imm
+    else:
+        pc = pc + 4
+    return pc
+
+def blt(rs1,rs2,imm,pc):
+    if bintodecs(registers[rs1])<bintodecs(registers[rs2]):
+        pc = pc + imm
+    else:
+        pc = pc + 4
+    return pc
+
+def bge(rs1,rs2,imm,pc):
+    if bintodecs(registers[rs1])>=bintodecs(registers[rs2]):
+        pc = pc + imm
+    else:
+        pc = pc + 4
+    return pc
